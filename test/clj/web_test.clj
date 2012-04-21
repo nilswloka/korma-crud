@@ -1,5 +1,4 @@
 (ns web-test
-  (:require [ring.adapter.jetty :as jetty])
   (:require [compojure.handler :as handler])
   (:use korma.db)
   (:use korma.core)
@@ -19,4 +18,6 @@
 (def handler (handler/site test-routes))
 
 
-
+(comment
+  (use 'ring.adapter.jetty)
+  (defonce server (run-jetty #'handler {:port 9090 :join? false})))
