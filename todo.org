@@ -1,0 +1,5 @@
+* Create paths
+** "/things" -> GET "/things", GET "/things/new", GET "/things/:id", POST "/things"
+* Create views
+** things-list, things-form, things-details
+* 

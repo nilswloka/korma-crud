@@ -1,7 +1,10 @@
 (defproject korma-crud "0.0.1-SNAPSHOT"
   :description "Create CRUD views for Korma-queries"
   :dependencies [[korma "0.3.0-beta7"]
-                 [postgresql "8.4-702.jdbc4"]]
+                 [postgresql "8.4-702.jdbc4"]
+                 [compojure "1.0.3"]
+                 [ring "1.1.0"]
+                 [hiccup "1.0.0"]]
   :plugins [[lein-cucumber "1.0.0"]]
   :source-paths ["src/clj"]
   :test-paths ["test/clj"]
