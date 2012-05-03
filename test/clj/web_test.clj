@@ -1,8 +1,8 @@
 (ns web-test
   (:require [compojure.handler :as handler])
+  (:use [crud :only [defcrud entity-field-types]])
   (:use korma.db)
   (:use korma.core)
-  (:use crud)
   (:use data-test))
 
 (defentity things
@@ -21,4 +21,4 @@
 (comment
   (use 'ring.adapter.jetty)
   (use 'web-test)
-  (defonce server (run-jetty #'handler {:port 9090 :join? false})))
+  (def server (run-jetty #'handler {:port 9090 :join? false})))
