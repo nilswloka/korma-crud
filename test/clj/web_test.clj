@@ -3,13 +3,13 @@
   (:use korma.db)
   (:use korma.core)
   (:use crud)
-  (:use data))
+  (:use data-test))
 
 (defentity things
   (table :things)
   (entity-fields :id :name :description :size)
   (entity-field-types {:id Integer :name String :description String :size Integer})
-  (database my-database))
+  (database test-database))
 
 (def all-things (select* things))
 
@@ -20,4 +20,5 @@
 
 (comment
   (use 'ring.adapter.jetty)
+  (use 'web-test)
   (defonce server (run-jetty #'handler {:port 9090 :join? false})))
