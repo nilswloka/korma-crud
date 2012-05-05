@@ -62,8 +62,10 @@
     (html5 [:h1 (str view-name "-details")]
            (form-to [:post (str base-url "/" id)]
                     (map form-field entity)
-                    (submit-button "Update")
-                    (link-to base-url "Back")))))
+                    (submit-button "Update"))
+           (form-to [:delete (str base-url "/" id)]
+                    (submit-button "Delete"))
+           (link-to base-url "Back"))))
 
 (defn update-entity [base-url query id params]
   (let [entity-types (-> query :ent :field-types)
@@ -99,13 +101,25 @@
             (values key-value))
     (response/redirect base-url)))
 
+(defn delete-entity [base-url query id]
+  (let [entity-symbol (-> query :ent :name)
+        primary-key (-> query :ent :pk)
+        primary-key-type (-> query :ent :field-types primary-key)
+        primary-key-value (as-value id primary-key-type)]
+    (delete entity-symbol
+            (where {primary-key primary-key-value}))
+    (response/redirect base-url)))
+
 ;;
 ;; CRUD
 ;;
 (defmacro defcrud [name base-url query]
   `(defroutes ~name
+     ;; Views
      (GET ~base-url [] (list-view ~base-url ~query))
-     (PUT ~base-url {params# :params} (create-entity ~base-url ~query params#))
      (GET (str ~base-url "/new") [] (create-view ~base-url ~query))
      (GET (str ~base-url "/:id") {{id# :id} :params} (detail-view ~base-url ~query id#))
-     (POST (str ~base-url "/:id") {{id# :id :as params#} :params} (update-entity ~base-url ~query id# params#))))
+     ;; Operations
+     (PUT    ~base-url {params# :params} (create-entity ~base-url ~query params#))
+     (POST   (str ~base-url "/:id") {{id# :id :as params#} :params} (update-entity ~base-url ~query id# params#))
+     (DELETE (str ~base-url "/:id") {{id# :id} :params} (delete-entity ~base-url ~query id#))))
