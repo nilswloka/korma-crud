@@ -1,8 +1,8 @@
-(ns inspect-test
+(ns crud.inspect-test
   (:use midje.sweet)
   (:use korma.core)
   (:use korma.db)
-  (:use inspect)
+  (:use crud.inspect)
   (:use [data-test :only [test-database]])
   (:use [crud :only [entity-field-types]]))
 

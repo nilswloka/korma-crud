@@ -1,4 +1,4 @@
-(ns inspect
+(ns crud.inspect
   "Functions to examine the korma query.")
 
 (defn field-without-table [table field]
