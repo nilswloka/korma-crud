@@ -1,8 +1,8 @@
 (ns crud
+  (:use inspect)
   (:use compojure.core)
   (:use [hiccup page core element form])
   (:use [korma.core :exclude [create-entity]])
-  (:use inspect)
   (:require [ring.util.response :as response]))
 
 ;;
@@ -24,8 +24,16 @@
   (assoc ent :field-types type-map))
 
 ;;
-;; Views / Pages
+;; Views
 ;;
+(defn empty-map [keys]
+  (into {} (map #(vector % nil) keys)))
+
+(defn pk-clause [query id]
+  (let [primary-key (pk-name query)
+        primary-key-value (as-value id (pk-type query))]
+    {primary-key primary-key-value}))
+
 (defn table-header [fields]
   [:tr
    (map #(vector :th (name %)) fields)])
@@ -37,29 +45,27 @@
 (defn table-data [base-url fields pk entities]
   (map (partial table-row base-url fields pk) entities))
 
-(defn list-view [base-url query]
-  (let [view-name (-> query :ent :name)
-        all-entities (select query)
-        all-fields (inspect-fields query)
-        pk (-> query :ent :pk)]
-    (html5 [:h1 (str view-name "-list")]
-           [:table
-            (table-header all-fields)
-            (table-data base-url all-fields pk all-entities)]
-           [:p (link-to (str base-url "/new") (str "Create " view-name))])))
-
 (defn form-field [[key value]]
   (list (label (name key) (name key))
         (text-field (name key) value)
         [:br]))
 
+(defn list-view [base-url query]
+  (let [entity-name  (entity-name query)
+        pk-name      (pk-name query)
+        all-fields   (inspect-fields query)
+        all-entities (select query)]
+    (html5 [:h1 (str entity-name "-list")]
+           [:table
+            (table-header all-fields)
+            (table-data base-url all-fields pk-name all-entities)]
+           [:p (link-to (str base-url "/new") (str "Create " entity-name))])))
+
 (defn detail-view [base-url query id]
-  (let [view-name (-> query :ent :name)
-        entity-symbol (-> query :ent :name)
-        primary-key (-> query :ent :pk)
-        primary-key-type (-> query :ent :field-types primary-key)
-        entity (first (select entity-symbol (where {(-> query :ent :pk) (as-value id primary-key-type)})))]
-    (html5 [:h1 (str view-name "-details")]
+  (let [entity-name (entity-name query)
+        query       (select entity-name (where (pk-clause query id)))
+        entity      (first query)]
+    (html5 [:h1 (str entity-name "-details")]
            (form-to [:post (str base-url "/" id)]
                     (map form-field entity)
                     (submit-button "Update"))
@@ -67,47 +73,47 @@
                     (submit-button "Delete"))
            (link-to base-url "Back"))))
 
-(defn update-entity [base-url query id params]
-  (let [entity-types (-> query :ent :field-types)
-        key-value (into {} (map (fn [[key text]] [key (as-value text (key entity-types))]) params))
-        primary-key (-> query :ent :pk)
-        primary-key-type (-> query :ent :field-types primary-key)
-        primary-key-value (as-value id primary-key-type)
-        entity-symbol (-> query :ent :name)]
-    (update entity-symbol
-          (set-fields key-value)
-          (where {primary-key primary-key-value}))
-    (response/redirect base-url)))
-
-(defn empty-map [keys]
-  (reduce #(merge %1 {%2 nil}) {} keys))
-
 (defn create-view [base-url query]
-  (let [view-name (-> query :ent :name)
-        all-fields (empty-map (inspect-fields query))]
-    (html5 [:h1 (str view-name "-create")]
+  (let [entity-name (entity-name query)
+        all-fields  (empty-map (inspect-fields query))]
+    (html5 [:h1 (str entity-name "-create")]
            (form-to [:put base-url]
                     (map form-field all-fields)
                     (submit-button "Create")
                     (link-to base-url "Back")))))
 
+;;
+;; Entity functions
+;;
+
+(defn convert-to-value [query params]
+  (let [field-types (field-types query)
+        convert     (fn [[key text]] [key (as-value text (field-types key))])]
+    (into {} (map convert params))))
+
 (defn create-entity [base-url query params]
-  (let [entity-types (-> query :ent :field-types)
-        all-fields (inspect-fields query)
-        all-params (select-keys params all-fields)
-        key-value (into {} (map (fn [[key text]] [key (as-value text (key entity-types))]) all-params))
-        entity-symbol (-> query :ent :name)]
-    (insert entity-symbol
+  (let [entity-name (entity-name query)
+        all-fields  (inspect-fields query)
+        all-params  (select-keys params all-fields)
+        key-value   (convert-to-value query all-params)]
+    (insert entity-name
             (values key-value))
     (response/redirect base-url)))
 
+(defn update-entity [base-url query id params]
+  (let [entity-name (entity-name query)
+        key-value   (convert-to-value query params)
+        pk-clause   (pk-clause query id)]
+    (update entity-name
+          (set-fields key-value)
+          (where pk-clause))
+    (response/redirect base-url)))
+
 (defn delete-entity [base-url query id]
-  (let [entity-symbol (-> query :ent :name)
-        primary-key (-> query :ent :pk)
-        primary-key-type (-> query :ent :field-types primary-key)
-        primary-key-value (as-value id primary-key-type)]
-    (delete entity-symbol
-            (where {primary-key primary-key-value}))
+  (let [entity-name (entity-name query)
+        pk-clause   (pk-clause query id)]
+    (delete entity-name
+            (where pk-clause))
     (response/redirect base-url)))
 
 ;;

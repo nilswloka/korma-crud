@@ -7,7 +7,8 @@
                  [ring "1.1.0"]
                  [hiccup "1.0.0"]]
   :plugins [[lein-cucumber "1.0.0"]
-            [lein-swank "1.4.2"]]
+            [lein-swank "1.4.2"]
+            [lein-midje "2.0.0-SNAPSHOT"]]
   :source-paths ["src/clj"]
   :test-paths ["test/clj"]
   :profiles {:dev {:dependencies [[midje "1.4.0-beta1"]]}})

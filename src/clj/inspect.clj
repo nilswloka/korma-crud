@@ -1,4 +1,5 @@
-(ns inspect)
+(ns inspect
+  "Functions to examine the korma query.")
 
 (defn field-without-table [table field]
   (let [field-without-quotes (.replaceAll field "\"" "")
@@ -13,4 +14,18 @@
   (if-let [selected-fields (-> query :options :fields)]
     (into #{} selected-fields)
     (-> query :ent fields-as-keywords)))
+
+(defn entity-name [query]
+  (-> query :ent :name))
+
+(defn field-types [query]
+  (-> query :ent :field-types))
+
+(defn pk-name [query]
+  (-> query :ent :pk))
+
+(defn pk-type [query]
+  (let [pk-name (pk-name query)
+        field-types (field-types query)]
+    (field-types pk-name)))
 
