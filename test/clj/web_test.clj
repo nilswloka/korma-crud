@@ -1,9 +1,9 @@
 (ns web-test
   (:require [compojure.handler :as handler])
-  (:use [crud :only [defcrud entity-field-types]])
+  (:use crud)
+  (:use data-test)
   (:use korma.db)
-  (:use korma.core)
-  (:use data-test))
+  (:use korma.core))
 
 (defentity things
   (table :things)
